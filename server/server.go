@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,6 +26,8 @@ func (s *Server) Run() error {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/subs", s.getSubs)
+
+	slog.Info("server started", slog.String("addr", s.addr))
 	return http.ListenAndServe(
 		s.addr,
 		s.logger(mux),
