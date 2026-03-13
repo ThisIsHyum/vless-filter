@@ -3,7 +3,7 @@ GOARCH = amd64
 OUTFILE = vless-filter-$(GOOS)-$(GOARCH)
 
 build:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(OUTFILE) main.go
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags "-s -w" -o $(OUTFILE) main.go
 
 build-arm-darwin:
 	$(MAKE) build GOOS=darwin GOARCH=arm64
