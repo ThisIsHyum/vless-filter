@@ -167,7 +167,7 @@ func (c *Client) GetFilteredLinks(limit int, maxLatency time.Duration) []byte {
 	var count int
 
 	for _, conn := range c.cached {
-		if conn.Latency >= maxLatency {
+		if maxLatency != 0 && conn.Latency >= maxLatency {
 			continue
 		}
 		links = append(links, conn.Link)
