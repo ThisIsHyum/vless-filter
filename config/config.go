@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"log"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -19,31 +18,66 @@ type Config struct {
 }
 
 func New() Config {
-	host := flag.String("host", "", "IP or Domain of server")
-	port := flag.Int("port", 80, "port of server")
-	interval := flag.Duration("interval", 30*time.Minute, "interval of subs updates")
-	timeout := flag.Duration("timeout", 3*time.Second, "timeout of one node")
-	workers := flag.Int("workers", 200, "amount of workers")
-	subsPath := flag.String("subs", "sub_urls.txt", "path to sub_urls.txt")
+	hostFlag := flag.String("host", "127.0.0.1", "IP or Domain of server")
+	portFlag := flag.Int("port", 80, "Port of server")
+	intervalFlag := flag.Duration("interval", 30*time.Minute, "Interval of subscriptions updates")
+	timeoutFlag := flag.Duration("timeout", 3*time.Second, "Timeout per node")
+	workersFlag := flag.Int("workers", 200, "Number of concurrent workers")
+	subsPathFlag := flag.String("subs", "sub_urls.txt", "Path to sub_urls.txt")
 
 	flag.Parse()
 
-	subs, err := getSubUrls(*subsPath)
-	if err != nil {
-		log.Fatal(err.Error())
+	host := *hostFlag
+	port := *portFlag
+	interval := *intervalFlag
+	timeout := *timeoutFlag
+	workers := *workersFlag
+	subsPath := *subsPathFlag
+
+	if envHost := os.Getenv("HOST"); envHost != "" {
+		host = envHost
 	}
-	return Config{
-		Host:     *host,
-		Port:     strconv.Itoa(*port),
-		Interval: *interval, Timeout: *timeout,
-		Workers: *workers,
-		SubUrls: subs,
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		if p, err := strconv.Atoi(envPort); err == nil {
+			port = p
+		}
+	}
+	if envInterval := os.Getenv("INTERVAL"); envInterval != "" {
+		if d, err := time.ParseDuration(envInterval); err == nil {
+			interval = d
+		}
+	}
+	if envTimeout := os.Getenv("TIMEOUT"); envTimeout != "" {
+		if d, err := time.ParseDuration(envTimeout); err == nil {
+			timeout = d
+		}
+	}
+	if envWorkers := os.Getenv("WORKERS"); envWorkers != "" {
+		if w, err := strconv.Atoi(envWorkers); err == nil {
+			workers = w
+		}
+	}
+	if envSubs := os.Getenv("SUBS_PATH"); envSubs != "" {
+		subsPath = envSubs
 	}
 
+	subs, err := getSubUrls(subsPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return Config{
+		Host:     host,
+		Port:     strconv.Itoa(port),
+		Interval: interval,
+		Timeout:  timeout,
+		Workers:  workers,
+		SubUrls:  subs,
+	}
 }
 
 func (c Config) Addr() string {
-	return net.JoinHostPort(c.Host, c.Port)
+	return c.Host + ":" + c.Port
 }
 
 func getSubUrls(path string) ([]string, error) {
