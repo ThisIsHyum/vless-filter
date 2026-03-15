@@ -2,7 +2,6 @@ package client
 
 import (
 	"crypto/tls"
-	"errors"
 	"io"
 	"log/slog"
 	"net"
@@ -45,8 +44,9 @@ func (c *Client) getLinks(url string) ([]string, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
 	bytes, err := io.ReadAll(resp.Body)
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err != nil {
 		return nil, err
 	}
 	links := strings.Split(string(bytes), "\n")
