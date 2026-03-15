@@ -154,7 +154,9 @@ func (c *Client) Cycle() {
 		for _, url := range c.urls {
 			links, err := c.getLinksWithRetry(url, 3)
 			if err != nil {
-				slog.Error("getLinksWithRetry: ", slog.Any("error", err), slog.String("url", url))
+				slog.Error("getLinksWithRetry failed",
+					slog.Any("error", err),
+					slog.String("url", url))
 				continue
 			}
 
