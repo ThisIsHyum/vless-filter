@@ -143,17 +143,21 @@ func (c *Client) isSuitable(link string) (Node, error) {
 }
 
 func (c *Client) Cycle() {
+	var cycleCount int
 	for {
-		slog.Info("cycle iteration started")
+		cycleCount++
+		slog.Info("cycle iteration started", slog.Int("cycle", cycleCount))
 
 		filtered := []Node{}
 		var failed int
+
 		for _, url := range c.urls {
 			links, err := c.getLinksWithRetry(url, 3)
 			if err != nil {
 				slog.Error("getLinksWithRetry: ", slog.Any("error", err), slog.String("url", url))
 				continue
 			}
+
 			nodes, fld := c.filter(links)
 			filtered = append(filtered, nodes...)
 			failed += fld
@@ -164,6 +168,7 @@ func (c *Client) Cycle() {
 		c.mu.Unlock()
 
 		slog.Info("cycle iteration finished",
+			slog.Int("cycle", cycleCount),
 			slog.Int("valid", len(filtered)),
 			slog.Int("failed", failed))
 		time.Sleep(c.interval)
