@@ -58,6 +58,19 @@ func (c *Client) getLinks(url string) ([]string, error) {
 	return links, nil
 }
 
+func (c *Client) getLinksWithRetry(url string, attempts int) ([]string, error) {
+	var err error
+	for range attempts {
+		var links []string
+		links, err = c.getLinks(url)
+		if err == nil {
+			return links, nil
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	return nil, err
+}
+
 func (c *Client) filter(links []string) (nodes []Node, failed int) {
 	connections := []Node{}
 	results := make(chan Node)
@@ -136,9 +149,9 @@ func (c *Client) Cycle() {
 		filtered := []Node{}
 		var failed int
 		for _, url := range c.urls {
-			links, err := c.getLinks(url)
+			links, err := c.getLinksWithRetry(url, 3)
 			if err != nil {
-				slog.Error("getLinks: ", slog.Any("error", err), slog.String("url", url))
+				slog.Error("getLinksWithRetry: ", slog.Any("error", err), slog.String("url", url))
 				continue
 			}
 			nodes, fld := c.filter(links)
